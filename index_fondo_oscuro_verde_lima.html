@@ -1,0 +1,178 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FinanServ - Préstamos Personales</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #121212;
+      color: #ffffff;
+    }
+    header {
+      background: #00c851;
+      color: white;
+      padding: 2rem;
+      text-align: center;
+    }
+    main {
+      max-width: 800px;
+      margin: auto;
+      padding: 2rem;
+      background: #1e1e1e;
+      margin-top: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    }
+    h2 {
+      color: #00c851;
+    }
+    label, select, input {
+      display: block;
+      margin-top: 1rem;
+      font-size: 1rem;
+    }
+    input, select {
+      padding: 0.5rem;
+      width: 100%;
+      background: #ffffff;
+      color: #000000;
+      border-radius: 5px;
+      border: none;
+    }
+    .group-label {
+      margin-top: 1.5rem;
+      font-weight: bold;
+      color: #00c851;
+    }
+    .result {
+      margin-top: 1rem;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+    .btn {
+      margin-top: 1.5rem;
+      display: inline-block;
+      padding: 0.8rem 1.5rem;
+      background: #00c851;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+    footer {
+      margin-top: 3rem;
+      text-align: center;
+      background: #00c851;
+      color: white;
+      padding: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>FinanServ</h1>
+    <p>Préstamos en efectivo rápidos, simples y accesibles</p>
+  </header>
+  <main>
+    <h2>Simulá tu préstamo</h2>
+    <label for="nombre">Tu nombre</label>
+    <input type="text" id="nombre" placeholder="Ej: Juan Pérez" />
+
+    <label for="monto">¿Cuánto necesitás? (hasta $1.000.000)</label>
+    <input type="number" id="monto" placeholder="Ej: 100000" />
+
+    <label for="tipoPlan">Tipo de plan</label>
+    <select id="tipoPlan">
+      <option value="">-- Elegí una opción --</option>
+      <option value="semanal">Semanal</option>
+      <option value="quincenal">Quincenal</option>
+    </select>
+
+    <div class="group-label" id="opcionesLabel" style="display:none;">Elegí el plazo:</div>
+    <select id="plan" disabled>
+      <option value="">-- Seleccioná un tipo primero --</option>
+    </select>
+
+    <div class="result" id="cuotaResult">Cuota por pago: $ -</div>
+
+    <a class="btn" href="#" id="whatsappBtn" target="_blank">Enviar por WhatsApp</a>
+  </main>
+
+  <footer>
+    <p>FinanServ © 2025 | Asesor: Martín Magallanes</p>
+  </footer>
+
+  <script>
+    const tasas = {
+      "5 semanas": { tasa: 0.40, pagos: 5 },
+      "10 semanas": { tasa: 0.70, pagos: 10 },
+      "15 semanas": { tasa: 1.20, pagos: 15 },
+      "4 quincenas": { tasa: 0.45, pagos: 4 },
+      "6 quincenas": { tasa: 0.80, pagos: 6 },
+      "8 quincenas": { tasa: 1.30, pagos: 8 }
+    };
+
+    const opcionesPorTipo = {
+      semanal: ["5 semanas", "10 semanas", "15 semanas"],
+      quincenal: ["4 quincenas", "6 quincenas", "8 quincenas"]
+    };
+
+    const nombreInput = document.getElementById("nombre");
+    const montoInput = document.getElementById("monto");
+    const tipoPlan = document.getElementById("tipoPlan");
+    const planSelect = document.getElementById("plan");
+    const cuotaResult = document.getElementById("cuotaResult");
+    const whatsappBtn = document.getElementById("whatsappBtn");
+    const opcionesLabel = document.getElementById("opcionesLabel");
+
+    tipoPlan.addEventListener("change", () => {
+      const tipo = tipoPlan.value;
+      planSelect.innerHTML = "";
+      if (tipo && opcionesPorTipo[tipo]) {
+        planSelect.disabled = false;
+        opcionesLabel.style.display = "block";
+        planSelect.innerHTML = '<option value="">-- Elegí un plazo --</option>';
+        opcionesPorTipo[tipo].forEach(plan => {
+          const opt = document.createElement("option");
+          opt.value = plan;
+          opt.textContent = plan;
+          planSelect.appendChild(opt);
+        });
+      } else {
+        planSelect.disabled = true;
+        opcionesLabel.style.display = "none";
+        planSelect.innerHTML = '<option value="">-- Seleccioná un tipo primero --</option>';
+      }
+      actualizarCuota();
+    });
+
+    function actualizarCuota() {
+      const monto = parseFloat(montoInput.value);
+      const plan = planSelect.value;
+      const nombre = nombreInput.value || "Cliente";
+
+      if (!isNaN(monto) && monto > 0 && monto <= 1000000 && plan && tasas[plan]) {
+        const datos = tasas[plan];
+        const total = monto * (1 + datos.tasa);
+        const cuota = total / datos.pagos;
+
+        cuotaResult.textContent = `Cuota por pago: $${cuota.toFixed(2)}`;
+        const mensaje = `Hola, soy ${nombre}. Estoy interesado en un préstamo de $${monto} a pagar en ${plan}. ¿Me pasás más info?`;
+        const url = `https://wa.me/541138456256?text=${encodeURIComponent(mensaje)}`;
+        whatsappBtn.href = url;
+      } else {
+        cuotaResult.textContent = "Completá los campos para ver tu cuota.";
+        whatsappBtn.href = "#";
+      }
+    }
+
+    montoInput.addEventListener("input", actualizarCuota);
+    planSelect.addEventListener("change", actualizarCuota);
+    nombreInput.addEventListener("input", actualizarCuota);
+  </script>
+</body>
+</html>
